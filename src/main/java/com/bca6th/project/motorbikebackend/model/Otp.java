@@ -20,5 +20,5 @@ public class Otp implements Serializable {
     private String code;
 
     @TimeToLive
-    private Long ttl = 300L; //5 min
+    private Long ttl = 30000000L; //5 min = 300L
 }

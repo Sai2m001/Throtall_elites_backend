@@ -10,6 +10,7 @@ public interface ProductService {
     Product create(Product product);
     Product update(Long id, Product product);
     void softDelete(Long id);
+    void hardDelete(Long id);
 
     // PUBLIC
     Product getById(Long id);

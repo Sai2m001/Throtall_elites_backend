@@ -40,6 +40,12 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    public void hardDelete(Long id) {
+        Product product = getById(id);
+        productRepository.delete(product);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Product getById(Long id) {
         return productRepository.findWithImagesById(id)

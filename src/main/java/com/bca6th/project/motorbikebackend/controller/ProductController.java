@@ -80,8 +80,16 @@ public class ProductController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Soft delete product", description = "Sets active = false")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> softDelete(@PathVariable Long id) {
         productService.softDelete(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Hard delete product")
+    public ResponseEntity<Void> hardDelete(@PathVariable Long id) {
+        productService.hardDelete(id);
         return ResponseEntity.ok().build();
     }
 
