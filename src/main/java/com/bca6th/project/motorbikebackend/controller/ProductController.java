@@ -85,6 +85,7 @@ public class ProductController {
         return ResponseEntity.ok().build();
     }
 
+    //ADMIN: Hard Delete
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Hard delete product")
