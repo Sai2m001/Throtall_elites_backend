@@ -1,14 +1,27 @@
 package com.bca6th.project.motorbikebackend.service;
 
+import com.bca6th.project.motorbikebackend.dto.product.ProductRequestDto;
 import com.bca6th.project.motorbikebackend.exception.ResourceNotFoundException;
 import com.bca6th.project.motorbikebackend.model.Product;
 import com.bca6th.project.motorbikebackend.model.ProductImage;
 import com.bca6th.project.motorbikebackend.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -17,18 +30,156 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
 
-    @Override
-    public Product create(Product product) {
-        product.setActive(true);
-        linkImagesToProduct(product);
-        return productRepository.save(product);
+    @Value("{app.upload.dir}")
+    private String uploadDir;
+
+    public List<ProductImage> processImageUploads(Product product, MultipartFile[] files) {
+        List<ProductImage> images = new ArrayList<>();
+
+        if (files == null || files.length == 0) {
+            return images;
+        }
+
+        // Define product-specific folder: src/uploads/products/{productId}
+        String productUploadPath = uploadDir + "/products/" + product.getId();
+        Path uploadPath = Paths.get(productUploadPath);
+
+        try {
+            // Create directories if they don't exist
+            Files.createDirectories(uploadPath);
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create upload directory" + product.getId());
+        }
+
+        for (int i = 0; i < files.length; i++) {
+            MultipartFile file = files[i];
+            if (file.isEmpty()) continue;
+
+            // Validate image type
+            String contentType = file.getContentType();
+            if (contentType == null || !contentType.startsWith("image/")) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only image files are allowed: " + file.getOriginalFilename());
+            }
+
+            // Generate unique filename to avoid conflicts
+            String originalFilename = file.getOriginalFilename();
+            String extension = "";
+            if (originalFilename != null && originalFilename.contains(".")) {
+                extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            }
+            String filename = UUID.randomUUID().toString() + extension;
+
+            // Full path to save file
+            Path filePath = uploadPath.resolve(filename);
+
+            try {
+                Files.write(filePath, file.getBytes());
+            } catch (IOException e) {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to save uploaded file" +filename);
+            }
+
+            // Create ProductImage entity with correct relative URL
+            ProductImage productImage = new ProductImage();
+            productImage.setImageUrl("/uploads/products/" + product.getId() + "/" + filename);
+            productImage.setPrimary(i == 0); // First image is primary
+            productImage.setProduct(product);
+
+            images.add(productImage);
+        }
+
+        return images;
     }
 
     @Override
-    public Product update(Long id, Product updatedProduct) {
-        Product existing = getById(id);
-        copyProperties(updatedProduct, existing);
-        linkImagesToProduct(existing);
+    public Product createProduct(ProductRequestDto dto, MultipartFile[] images) {
+
+        // 1. Create new Product entity from DTO
+        Product product = new Product();
+        product.setName(dto.getName());
+        product.setBrand(dto.getBrand());
+        product.setType(dto.getType());
+        product.setDimensionMmLWH(dto.getDimensionMmLWH());
+        product.setEngineCapacityCc(dto.getEngineCapacityCc());
+        product.setEngineType(dto.getEngineType());
+        product.setMaxPower(dto.getMaxPower());
+        product.setMaxTorque(dto.getMaxTorque());
+        product.setMileageKmpl(dto.getMileageKmpl());
+        product.setTopSpeedKmph(dto.getTopSpeedKmph());
+        product.setGearbox(dto.getGearbox());
+        product.setClutchType(dto.getClutchType());
+        product.setFrontBrake(dto.getFrontBrake());
+        product.setRearBrake(dto.getRearBrake());
+        product.setFrontSuspension(dto.getFrontSuspension());
+        product.setRearSuspension(dto.getRearSuspension());
+        product.setFrontTyre(dto.getFrontTyre());
+        product.setRearTyre(dto.getRearTyre());
+        product.setTyreType(dto.getTyreType());
+        product.setFuelTankCapacityL(dto.getFuelTankCapacityL());
+        product.setSeatHeightMm(dto.getSeatHeightMm());
+        product.setGroundClearanceMm(dto.getGroundClearanceMm());
+        product.setKerbWeightKg(dto.getKerbWeightKg());
+        product.setStock(dto.getStock());
+        product.setPrice(dto.getPrice());
+
+        product.setActive(true); // New products are active by default
+
+        // 2. Save product first to generate ID (required for folder path)
+        product = productRepository.save(product);
+
+        // 3. Handle image uploads (if any)
+        if (images != null && images.length > 0) {
+            List<ProductImage> uploadedImages = processImageUploads(product, images);
+            product.getImages().addAll(uploadedImages);
+
+            // 4. Save again with attached images
+            product = productRepository.save(product);
+        }
+
+        return product;
+    }
+
+    @Override
+    public Product updateProduct(Long id, ProductRequestDto dto, MultipartFile[] newImages) {
+
+        // 1. Find existing product (throws if not found – you can customize the exception)
+        Product existing = productRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found with id: " + id));
+
+        // 2. Update scalar fields from DTO
+        existing.setName(dto.getName());
+        existing.setBrand(dto.getBrand());
+        existing.setType(dto.getType());
+        existing.setDimensionMmLWH(dto.getDimensionMmLWH());
+        existing.setEngineCapacityCc(dto.getEngineCapacityCc());
+        existing.setEngineType(dto.getEngineType());
+        existing.setMaxPower(dto.getMaxPower());
+        existing.setMaxTorque(dto.getMaxTorque());
+        existing.setMileageKmpl(dto.getMileageKmpl());
+        existing.setTopSpeedKmph(dto.getTopSpeedKmph());
+        existing.setGearbox(dto.getGearbox());
+        existing.setClutchType(dto.getClutchType());
+        existing.setFrontBrake(dto.getFrontBrake());
+        existing.setRearBrake(dto.getRearBrake());
+        existing.setFrontSuspension(dto.getFrontSuspension());
+        existing.setRearSuspension(dto.getRearSuspension());
+        existing.setFrontTyre(dto.getFrontTyre());
+        existing.setRearTyre(dto.getRearTyre());
+        existing.setTyreType(dto.getTyreType());
+        existing.setFuelTankCapacityL(dto.getFuelTankCapacityL());
+        existing.setSeatHeightMm(dto.getSeatHeightMm());
+        existing.setGroundClearanceMm(dto.getGroundClearanceMm());
+        existing.setKerbWeightKg(dto.getKerbWeightKg());
+        existing.setStock(dto.getStock());
+        existing.setPrice(dto.getPrice());
+        // active remains unchanged (use separate endpoint for soft delete if needed)
+
+        // 3. Handle new image uploads (optional – if no new images sent, skip)
+        if (newImages != null && newImages.length > 0) {
+            List<ProductImage> uploadedImages = processImageUploads(existing, newImages);
+            existing.getImages().addAll(uploadedImages);
+        }
+
+        // 4. Save and return updated product (with new images if added)
         return productRepository.save(existing);
     }
 

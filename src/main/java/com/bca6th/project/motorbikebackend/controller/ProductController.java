@@ -1,17 +1,22 @@
 package com.bca6th.project.motorbikebackend.controller;
 
+import com.bca6th.project.motorbikebackend.dto.product.ProductRequestDto;
 import com.bca6th.project.motorbikebackend.model.Product;
 import com.bca6th.project.motorbikebackend.service.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/products")
@@ -22,76 +27,50 @@ public class ProductController {
     private final ProductService productService;
 
     // ADMIN: Create
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Create a new motorbike product", description = "Admin only")
-    //JSON foramt example
-    // {
-    //  "name": "KTM Duke 200",
-    //  "brand": "KTM",
-    //  "type": "Naked",
-    //  "dimensionMmLWH": "2002 x 873 x 1274",
-    //  "engineCapacityCc": 200,
-    //  "engineType": "Liquid Cooled, Single Cylinder, DOHC",
-    //  "maxPower": "25 PS @ 10000 rpm",
-    //  "maxTorque": "19.5 Nm @ 8000 rpm",
-    //  "mileageKmpl": "35 km/l",
-    //  "topSpeedKmph": "142 km/h",
-    //  "gearbox": "6 Speed",
-    //  "clutchType": "Slipper Clutch",
-    //  "frontBrake": "300mm Disc, ABS",
-    //  "rearBrake": "230mm Disc, ABS",
-    //  "frontSuspension": "WP USD Fork",
-    //  "rearSuspension": "WP Monoshock",
-    //  "frontTyre": "110/70-17",
-    //  "rearTyre": "150/60-17",
-    //  "tyreType": "Tubeless",
-    //  "fuelTankCapacityL": "13.4 L",
-    //  "seatHeightMm": "822 mm",
-    //  "groundClearanceMm": "155 mm",
-    //  "kerbWeightKg": "159 kg",
-    //  "stock": 12,
-    //  "price": 245000.0,
-    //  "active": true,
-    //  "images": [
-    //    {
-    //      "imageUrl": "https://example.com/duke200-front.jpg",
-    //      "primary": true
-    //    },
-    //    {
-    //      "imageUrl": "https://example.com/duke200-side.jpg",
-    //      "primary": false
-    //    }
-    //  ]
-    //}
-    public ResponseEntity<Product> create(@Valid @RequestBody Product product) {
-        return ResponseEntity.ok(productService.create(product));
+    public ResponseEntity<Product> createProduct(
+            @Parameter(description = "Product details in JSON format", required = true)
+            @RequestPart("product") @Valid ProductRequestDto dto,
+
+            @Parameter(description = "Product images (multiple allowed)", required = false)
+            @RequestPart("images") MultipartFile[] images) {
+
+        Product created = productService.createProduct(dto, images);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     // ADMIN: Update
-    @PatchMapping("/{id}")
+    @PatchMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Update existing product", description = "Admin only")
-    public ResponseEntity<Product> update(@PathVariable Long id, @Valid @RequestBody Product product) {
-        return ResponseEntity.ok(productService.update(id, product));
+    @Operation(summary = "Update a existing motorbike product", description = "Admin only")
+    public ResponseEntity<Product> updateProduct(
+            @PathVariable Long id,
+            @Parameter(description = "Product details in JSON format", required = true)
+            @RequestPart("product") @Valid ProductRequestDto dto,
+
+            @Parameter(description = "Product images (multiple allowed)", required = false)
+            @RequestPart("images") MultipartFile[] images) {
+
+        Product updated = productService.updateProduct(id, dto, images);
+        return ResponseEntity.ok(updated);
     }
 
-    // ADMIN: Soft Delete
-    @DeleteMapping("/{id}")
+    // ADMIN: Soft delete (logical delete – set active = false)
+    @DeleteMapping("/{id}/soft")
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Soft delete product", description = "Sets active = false")
     public ResponseEntity<Void> softDelete(@PathVariable Long id) {
         productService.softDelete(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
-    //ADMIN: Hard Delete
-    @DeleteMapping("/{id}")
+    // ADMIN: Hard delete (permanent removal from DB)
+    @DeleteMapping("/{id}/hard")
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Hard delete product")
     public ResponseEntity<Void> hardDelete(@PathVariable Long id) {
         productService.hardDelete(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
     // PUBLIC: Get by ID
