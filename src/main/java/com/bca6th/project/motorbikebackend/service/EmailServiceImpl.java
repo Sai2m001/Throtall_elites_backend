@@ -19,7 +19,7 @@ public class EmailServiceImpl implements EmailService{
         MimeMessageHelper helper = new MimeMessageHelper(message);
         try{
             helper.setTo(to);
-            helper.setSubject("Your OTP for Dhamaka Throt-all Motorbike Login");
+            helper.setSubject("Your OTP for Dhamaka Throat-all Motorbike Login");
             helper.setText("""
                     <h2>Your OTP is : <strong>%s</strong></h2>
                     <p>It is valid for 5 minutes.<p>
