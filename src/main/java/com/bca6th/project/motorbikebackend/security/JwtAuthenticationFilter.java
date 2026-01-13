@@ -13,11 +13,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
-import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
@@ -25,16 +23,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtils jwtUtils;
     private final UserDetailsService userDetailsService;
-
-
-    private static final Set<String> PUBLIC_PATHS = Set.of(
-            "/api/auth/**",
-            "/v3/api-docs/**",
-            "/swagger-ui/**",
-            "/swagger-ui.html",
-            "/swagger-resources/**",
-            "/webjars/**"
-    );
 
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
@@ -45,13 +33,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain) throws ServletException, IOException {
 
         String path = request.getRequestURI();
+        String method = request.getMethod();
 
-        // Skip JWT check for public paths
-        if (PUBLIC_PATHS.stream().anyMatch(pattern -> pathMatcher.match(pattern, path))) {
+        // Skip JWT check for known public paths AND all GET requests to products
+        if (isPublicPath(path) || isPublicProductsGet(path, method)) {
             filterChain.doFilter(request, response);
             return;
         }
 
+        // Normal JWT processing only for protected paths
         String jwt = parseJwt(request);
 
         if (jwt != null && jwtUtils.validateToken(jwt)) {
@@ -72,19 +62,29 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
+    private boolean isPublicPath(String path) {
+        return pathMatcher.match("/api/auth/**", path) ||
+                pathMatcher.match("/v3/api-docs/**", path) ||
+                pathMatcher.match("/swagger-ui/**", path) ||
+                pathMatcher.match("/swagger-ui.html", path) ||
+                pathMatcher.match("/swagger-resources/**", path) ||
+                pathMatcher.match("/webjars/**", path);
+    }
+
+    private boolean isPublicProductsGet(String path, String method) {
+        return "GET".equalsIgnoreCase(method) &&
+                pathMatcher.match("/api/products/**", path);
+    }
+
     private String parseJwt(HttpServletRequest request) {
-        String header = request.getHeader("Authorization");
+        String authHeader = request.getHeader("Authorization");
 
-        // Add this debug line
-        System.out.println("🔐 Authorization Header: " + header);
-
-        if (StringUtils.hasText(header) && header.startsWith("Bearer ")) {
-            String token = header.substring(7);
-            System.out.println("✅ JWT Token extracted: " + token.substring(0, 20) + "...");
-            return token;
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String jwt = authHeader.substring(7).trim();
+            if (!jwt.isEmpty() && !jwt.equals("null") && !jwt.equals("undefined")) {
+                return jwt;
+            }
         }
-
-        System.out.println("❌ No valid Authorization header found");
         return null;
     }
 }

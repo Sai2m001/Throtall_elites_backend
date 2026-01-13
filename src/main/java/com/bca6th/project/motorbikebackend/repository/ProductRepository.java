@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface ProductRepository extends JpaRepository<Product, Long> {
@@ -22,21 +23,20 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     // Search with filters + images + pagination
     @Query("""
-        SELECT p FROM Product p LEFT JOIN FETCH p.images
-        WHERE p.active = true
-          AND (:name IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%')))
-          AND (:brand IS NULL OR LOWER(p.brand) = LOWER(:brand))
-          AND (:type IS NULL OR LOWER(p.type) = LOWER(:type))
-          AND (:minCc IS NULL OR p.engineCapacityCc >= :minCc)
-          AND (:maxCc IS NULL OR p.engineCapacityCc <= :maxCc)
-          AND (:minPrice IS NULL OR p.price >= :minPrice)
-          AND (:maxPrice IS NULL OR p.price <= :maxPrice)
-        """)
-    @EntityGraph(attributePaths = "images")
+    SELECT p FROM Product p LEFT JOIN FETCH p.images
+    WHERE p.active = true
+      AND (:name IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%')))
+      AND (:brandList IS NULL OR LOWER(p.brand) IN :brandList)
+      AND (:typeList IS NULL OR LOWER(p.type) IN :typeList)
+      AND (:minCc IS NULL OR p.engineCapacityCc >= :minCc)
+      AND (:maxCc IS NULL OR p.engineCapacityCc <= :maxCc)
+      AND (:minPrice IS NULL OR p.price >= :minPrice)
+      AND (:maxPrice IS NULL OR p.price <= :maxPrice)
+    """)
     Page<Product> search(
             @Param("name") String name,
-            @Param("brand") String brand,
-            @Param("type") String type,
+            @Param("brandList") List<String> brandList,
+            @Param("typeList") List<String> typeList,
             @Param("minCc") Integer minCc,
             @Param("maxCc") Integer maxCc,
             @Param("minPrice") Double minPrice,

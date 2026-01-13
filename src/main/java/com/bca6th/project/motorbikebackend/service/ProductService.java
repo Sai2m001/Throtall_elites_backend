@@ -23,8 +23,8 @@ public interface ProductService {
     Page<Product> getAllActive(Pageable pageable);
     Page<Product> search(
             String name,
-            String brand,
-            String type,
+            List<String> brandList,
+            List<String> typeList,
             Integer minCc,
             Integer maxCc,
             Double minPrice,

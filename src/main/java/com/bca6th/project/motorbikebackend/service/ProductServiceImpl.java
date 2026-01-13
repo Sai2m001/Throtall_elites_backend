@@ -211,12 +211,12 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Product> search(String name, String brand, String type,
+    public Page<Product> search(String name, List<String> brandList, List<String> typeList,
                                 Integer minCc, Integer maxCc,
                                 Double minPrice, Double maxPrice,
                                 Pageable pageable) {
         return productRepository.search(
-                name, brand, type, minCc, maxCc, minPrice, maxPrice, pageable
+                name, brandList, typeList, minCc, maxCc, minPrice, maxPrice, pageable
         );
     }
 
