@@ -28,7 +28,7 @@ public class ProductController {
 
     // ADMIN: Create
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN', 'SUPERADMIN')")
     @Operation(summary = "Create a new motorbike product", description = "Admin only")
     public ResponseEntity<Product> createProduct(
             @Parameter(description = "Product details in JSON format", required = true)
@@ -43,7 +43,7 @@ public class ProductController {
 
     // ADMIN: Update
     @PatchMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN', 'SUPERADMIN')")
     @Operation(summary = "Update a existing motorbike product", description = "Admin only")
     public ResponseEntity<Product> updateProduct(
             @PathVariable Long id,
@@ -59,7 +59,7 @@ public class ProductController {
 
     // ADMIN: Soft delete (logical delete – set active = false)
     @DeleteMapping("/{id}/soft")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN', 'SUPERADMIN')")
     public ResponseEntity<Void> softDelete(@PathVariable Long id) {
         productService.softDelete(id);
         return ResponseEntity.noContent().build();
@@ -67,7 +67,7 @@ public class ProductController {
 
     // ADMIN: Hard delete (permanent removal from DB)
     @DeleteMapping("/{id}/hard")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN', 'SUPERADMIN')")
     public ResponseEntity<Void> hardDelete(@PathVariable Long id) {
         productService.hardDelete(id);
         return ResponseEntity.noContent().build();

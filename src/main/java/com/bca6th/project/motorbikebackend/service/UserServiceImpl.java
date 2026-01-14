@@ -6,13 +6,20 @@ import com.bca6th.project.motorbikebackend.repository.UserRepository;
 import com.bca6th.project.motorbikebackend.security.UserDetailsServiceImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.net.Authenticator;
-
+@Service
 public class UserServiceImpl implements UserService{
 
-    public  UserRepository userRepository;
+    private final UserRepository userRepository;
+
+    public UserServiceImpl(UserRepository userRepository){
+        this.userRepository = userRepository;
+        System.out.println("UserServiceImpl created. userRepository = " +
+                (userRepository != null ? "injected" : "NULL !!!"));
+    }
 
     @Override
     public void changeRole(Long id, Role newRole) {
@@ -23,8 +30,6 @@ public class UserServiceImpl implements UserService{
 //        if(id.equals(((UserDetailsServiceImpl) auth.getPrincipal()).getId())){
 //            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You are not allowed to change your role");
 //        }
-
-
         user.setRole(newRole);
         userRepository.save(user);
     }
