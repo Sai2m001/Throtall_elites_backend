@@ -38,23 +38,26 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // Allow CORS preflight (OPTIONS) on all paths
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
                         // Public endpoints
                         .requestMatchers("/api/auth/**",
                                 "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",
                                 "/swagger-resources/**", "/webjars/**").permitAll()
 
-                        // Public GET for products
-                        .requestMatchers(HttpMethod.GET, "/api/products", "/api/products/**").permitAll()
+                        // Public GET for products (already good, but make it explicit)
+                        .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
 
-                        // Admin-only CRUD for products
+                        // Admin CRUD
                         .requestMatchers(HttpMethod.POST, "/api/products").hasAnyRole("ADMIN", "SUPERADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/products/**").hasAnyRole("ADMIN", "SUPERADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/products/**").hasAnyRole("ADMIN", "SUPERADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasAnyRole("ADMIN", "SUPERADMIN")
 
-                        // Superadmin-only for user management
+                        // Superadmin role change
                         .requestMatchers("/api/users/{id}/role").hasRole("SUPERADMIN")
 
-                        // Everything else requires authentication
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);

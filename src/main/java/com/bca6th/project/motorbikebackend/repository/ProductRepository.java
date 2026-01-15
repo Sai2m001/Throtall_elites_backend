@@ -3,6 +3,7 @@ package com.bca6th.project.motorbikebackend.repository;
 import com.bca6th.project.motorbikebackend.model.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -12,15 +13,20 @@ import java.util.Optional;
 
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
-    // Fetch product with images (eager)
-    @EntityGraph(attributePaths = "images")
-    Optional<Product> findWithImagesById(Long id);
+    @EntityGraph(attributePaths = {"images"})
+    Optional<Product> findProductWithImagesById(Long id);
 
-    // Fetch all active products with images + pagination
-    @EntityGraph(attributePaths = "images")
-    Page<Product> findByActiveTrue(Pageable pageable);
+    //Client/Public users side: Get all active product
+    @EntityGraph(attributePaths = {"images"})
+    @Query("SELECT p FROM Product p WHERE  p.active = true")
+    Slice<Product> findAllActiveSlice(Pageable pageable);
 
-    // Search with filters + images + pagination
+    //Admin side: Get all product for admin dashboard
+    @EntityGraph(attributePaths = {"images"})
+    Page<Product> findAll(Pageable pageable);
+
+
+     //Search with filters + images + pagination
     @Query("""
         SELECT p FROM Product p LEFT JOIN FETCH p.images
         WHERE p.active = true

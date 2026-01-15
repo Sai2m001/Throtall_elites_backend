@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -184,29 +185,34 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    public Page<Product> getProductsForAdmin(Pageable pageable) {
+        return productRepository.findAll(pageable);
+    }
+
+    @Override
     public void softDelete(Long id) {
-        Product product = getById(id);
+        Product product = getProductById(id);
         product.setActive(false);
         productRepository.save(product);
     }
 
     @Override
     public void hardDelete(Long id) {
-        Product product = getById(id);
+        Product product = getProductById(id);
         productRepository.delete(product);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Product getById(Long id) {
-        return productRepository.findWithImagesById(id)
+    public Product getProductById(Long id) {
+        return productRepository.findProductWithImagesById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Product> getAllActive(Pageable pageable) {
-        return productRepository.findByActiveTrue(pageable);
+    public Slice<Product> getProductForClients(Pageable pageable) {
+        return productRepository.findAllActiveSlice(pageable);
     }
 
     @Override
