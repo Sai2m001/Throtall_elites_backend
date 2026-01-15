@@ -1,5 +1,6 @@
 package com.bca6th.project.motorbikebackend.service;
 
+import com.bca6th.project.motorbikebackend.dto.product.BrandTag;
 import com.bca6th.project.motorbikebackend.dto.product.ProductRequestDto;
 import com.bca6th.project.motorbikebackend.exception.ResourceNotFoundException;
 import com.bca6th.project.motorbikebackend.model.Product;
@@ -190,10 +191,11 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public void softDelete(Long id) {
-        Product product = getProductById(id);
-        product.setActive(false);
-        productRepository.save(product);
+    public Product toggleProductActiveStatus(Long id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
+        product.setActive(!product.getActive());
+        return productRepository.save(product);
     }
 
     @Override
@@ -213,6 +215,12 @@ public class ProductServiceImpl implements ProductService {
     @Transactional(readOnly = true)
     public Slice<Product> getProductForClients(Pageable pageable) {
         return productRepository.findAllActiveSlice(pageable);
+    }
+
+
+    @Override
+    public List<BrandTag> getActiveBrandTags() {
+        return productRepository.findActiveBrandTags();
     }
 
     @Override

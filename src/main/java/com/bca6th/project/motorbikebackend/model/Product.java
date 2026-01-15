@@ -26,73 +26,66 @@ public class Product {
     private String brand;
 
     @Column(nullable = false, length = 100)
-    private String type; // Naked, Cruiser, Sport, etc.
+    private String type;
 
-    @Column(name = "dimension_mm_l_w_h",nullable = false, length = 50)
-    //These dimensions describe the physical size of the bike.
-    // Width represents the distance across the widest part of the bike,
-    // length is the distance from front to back,
-    // and height is the vertical measurement from the ground to the highest point of the bike.
-    private String dimensionMmLWH; // length*width*height
+    @Column(name = "dimension_mm_l_w_h", length = 100)  // was 50
+    private String dimensionMmLWH;
 
     @Column(name = "engine_capacity_cc", nullable = false)
     private Integer engineCapacityCc;
 
-    @Column(name = "engine_type", nullable = false, length = 50)
-    private String engineType; // air-cooled, liquid-cooled, FI
+    @Column(name = "engine_type", length = 150)  // was 50 → increased
+    private String engineType;
 
-    @Column(name = "max_power", nullable = false, length = 30)
-    private String maxPower;  // hp/Ps
+    @Column(name = "max_power", length = 100)  // was 30
+    private String maxPower;
 
-    @Column(name = "max_torque", nullable = false, length = 30)
-    private String maxTorque;  //Nm
+    @Column(name = "max_torque", length = 100)  // was 30
+    private String maxTorque;
 
-    @Column(name = "mileage_kmpl", length = 20)
+    @Column(name = "mileage_kmpl", length = 50)  // safe
     private String mileageKmpl;
 
-    @Column(name = "top_speed_kmph", length = 20)
+    @Column(name = "top_speed_kmph", length = 50)
     private String topSpeedKmph;
 
-    @Column(name = "gearbox", length = 20)
-    private String gearbox; // 5-speed, 6-speed
+    @Column(name = "gearbox", length = 50)
+    private String gearbox;
 
-    @Column(name = "clutch_type", length = 50)
-    private String clutchType; //slipper clutch, wet multi-plate, etc
+    @Column(name = "clutch_type", length = 100)  // was 50
+    private String clutchType;
 
-    // Brake : disc/drum + ABS
-    @Column(name = "front_brake", length = 50)
+    @Column(name = "front_brake", length = 100)  // was 50
     private String frontBrake;
 
-    @Column(name = "rear_brake", length = 50)
+    @Column(name = "rear_brake", length = 100)  // was 50
     private String rearBrake;
 
-    //F.Suspension : telescope, USD fork
-    @Column(name = "front_suspension", length = 100)
+    @Column(name = "front_suspension", length = 150)  // was 100
     private String frontSuspension;
 
-    //R.suspension : monoshock, dual-shock
-    @Column(name = "rear_suspension", length = 100)
+    @Column(name = "rear_suspension", length = 150)  // was 100
     private String rearSuspension;
 
-    @Column(name = "front_tyre", length = 50)
+    @Column(name = "front_tyre", length = 100)  // was 50
     private String frontTyre;
 
-    @Column(name = "rear_tyre", length = 50)
+    @Column(name = "rear_tyre", length = 100)  // was 50
     private String rearTyre;
 
-    @Column(name = "tyre_type", length = 30)
+    @Column(name = "tyre_type", length = 50)
     private String tyreType;
 
-    @Column(name = "fuel_tank_capacity_l", length = 20)
+    @Column(name = "fuel_tank_capacity_l", length = 50)
     private String fuelTankCapacityL;
 
-    @Column(name = "seat_height_mm", length = 20)
+    @Column(name = "seat_height_mm", length = 50)
     private String seatHeightMm;
 
-    @Column(name = "ground_clearance_mm", length = 20)
+    @Column(name = "ground_clearance_mm", length = 50)
     private String groundClearanceMm;
 
-    @Column(name = "kerb_weight_kg", length = 20)
+    @Column(name = "kerb_weight_kg", length = 50)
     private String kerbWeightKg;
 
     @Column(nullable = false)

@@ -1,5 +1,6 @@
 package com.bca6th.project.motorbikebackend.controller;
 
+import com.bca6th.project.motorbikebackend.dto.product.BrandTag;
 import com.bca6th.project.motorbikebackend.dto.product.ProductRequestDto;
 import com.bca6th.project.motorbikebackend.model.Product;
 import com.bca6th.project.motorbikebackend.service.ProductService;
@@ -18,6 +19,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/products")
 @RequiredArgsConstructor
@@ -28,7 +31,7 @@ public class ProductController {
 
     // ADMIN: Create Products
     @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('ADMIN', 'SUPERADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPERADMIN')")
     @Operation(summary = "Create a new motorbike product", description = "Creates a new product with optional images. Admin and Superadmin only.")
     public ResponseEntity<Product> createProduct(
             @Parameter(description = "Product details in JSON format", required = true)
@@ -43,7 +46,7 @@ public class ProductController {
 
     // ADMIN: Update Products
     @PatchMapping(value = "/update/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('ADMIN', 'SUPERADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPERADMIN')")
     @Operation(summary = "Update a existing motorbike product", description = "Updates product details and images. Admin and Superadmin only.")
     public ResponseEntity<Product> updateProduct(
             @PathVariable Long id,
@@ -58,8 +61,8 @@ public class ProductController {
     }
 
     // ADMIN: List all products for admin dashboard
-    @GetMapping("/getAllProducts")
-    @PreAuthorize("hasRole('ADMIN', 'SUPERADMIN')")
+    @GetMapping("/getAllProduct")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPERADMIN')")
     @Operation(summary = "Gets all products for Admin Dashboard", description = "Gets all products including inactive ones. Admin and Superadmin only.")
     public ResponseEntity<Page<Product>> getProductsForAdmin(Pageable pageable){
         Page<Product> products = productService.getProductsForAdmin(pageable);
@@ -67,17 +70,17 @@ public class ProductController {
     }
 
     // ADMIN: Soft delete (logical delete – set active = false)
-    @DeleteMapping("/{id}/softDelete")
-    @PreAuthorize("hasRole('ADMIN', 'SUPERADMIN')")
+    @DeleteMapping("/toogle-active/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPERADMIN')")
     @Operation(summary = "Deactivate active products", description = "Sets product as inactive instead of deleting from DB. Admin and Superadmin only.")
-    public ResponseEntity<Void> softDelete(@PathVariable Long id) {
-        productService.softDelete(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<Product> toggleActiveStatus(@PathVariable Long id) {
+        Product updatedProduct  =  productService.toggleProductActiveStatus(id);
+        return ResponseEntity.ok(updatedProduct);
     }
 
     // ADMIN: Hard delete (permanent removal from DB)
     @DeleteMapping("/{id}/delete")
-    @PreAuthorize("hasRole('ADMIN', 'SUPERADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPERADMIN')")
     @Operation(summary = "Hard delete product from database", description = "Permanently removes product from DB. Admin and Superadmin only.")
     public ResponseEntity<Void> hardDelete(@PathVariable Long id) {
         productService.hardDelete(id);
@@ -98,6 +101,12 @@ public class ProductController {
     public ResponseEntity<Slice<Product>> getProductsForClients(Pageable pageable){
         Slice<Product> products = productService.getProductForClients(pageable);
         return ResponseEntity.ok(products);
+    }
+
+    // Gets Brand Tags with active product count
+    @GetMapping("/getBrand-tags")
+    public ResponseEntity<List<BrandTag>> getActiveBrandTags() {
+        return ResponseEntity.ok(productService.getActiveBrandTags());
     }
 
 //    PUBLIC: List all active

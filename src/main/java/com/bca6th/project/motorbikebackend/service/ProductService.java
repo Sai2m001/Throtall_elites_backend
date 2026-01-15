@@ -1,5 +1,6 @@
 package com.bca6th.project.motorbikebackend.service;
 
+import com.bca6th.project.motorbikebackend.dto.product.BrandTag;
 import com.bca6th.project.motorbikebackend.dto.product.ProductRequestDto;
 import com.bca6th.project.motorbikebackend.model.Product;
 import com.bca6th.project.motorbikebackend.model.ProductImage;
@@ -17,7 +18,14 @@ public interface ProductService {
     Product createProduct(ProductRequestDto dto, MultipartFile[] images);
     Product updateProduct(Long id, ProductRequestDto dto, MultipartFile[] newImages);
     Page<Product> getProductsForAdmin(Pageable pageable);
-    void softDelete(Long id);
+    /**
+     * Toggles the active status of a product.
+     * - If active = true → sets to false (soft delete / deactivate)
+     * - If active = false → sets to true (reactivate / restore)
+     * @param id product ID
+     * @return the updated Product
+     */
+    Product toggleProductActiveStatus(Long id);
     void hardDelete(Long id);
 
     // PUBLIC
@@ -33,4 +41,5 @@ public interface ProductService {
             Double maxPrice,
             Pageable pageable
     );
+    List<BrandTag> getActiveBrandTags();
 }

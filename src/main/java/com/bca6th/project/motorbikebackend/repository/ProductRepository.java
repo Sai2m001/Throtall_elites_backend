@@ -1,5 +1,6 @@
 package com.bca6th.project.motorbikebackend.repository;
 
+import com.bca6th.project.motorbikebackend.dto.product.BrandTag;
 import com.bca6th.project.motorbikebackend.model.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -9,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface ProductRepository extends JpaRepository<Product, Long> {
@@ -24,6 +26,14 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     //Admin side: Get all product for admin dashboard
     @EntityGraph(attributePaths = {"images"})
     Page<Product> findAll(Pageable pageable);
+
+    // List of brands with count of active products
+    @Query("SELECT new com.bca6th.project.motorbikebackend.dto.product.BrandTag(p.brand, COUNT(p)) " +
+            "FROM Product p " +
+            "WHERE p.active = true " +
+            "GROUP BY p.brand " +
+            "ORDER BY p.brand ASC")
+    List<BrandTag> findActiveBrandTags();
 
 
      //Search with filters + images + pagination

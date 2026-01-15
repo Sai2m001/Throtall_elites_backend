@@ -31,16 +31,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final UserDetailsService userDetailsService;
     private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
-
-    private static final Set<String> PUBLIC_PATHS = Set.of(
-            "/api/auth/**",
-            "/v3/api-docs/**",
-            "/swagger-ui/**",
-            "/swagger-ui.html",
-            "/swagger-resources/**",
-            "/webjars/**"
-    );
-
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
     @Override
@@ -50,45 +40,71 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain) throws ServletException, IOException {
 
         String path = request.getRequestURI();
+        String authHeader = request.getHeader("Authorization");
 
-        // 1. Skip the entire JWT validation for known public paths
+        logger.info("JWT Filter - Path: {}, Auth Header: {}", path, authHeader);
+
+        // Skip JWT validation ONLY for truly public paths
         if (isPublicPath(path)) {
+            logger.info("Skipping JWT for public path: {}", path);
             filterChain.doFilter(request, response);
             return;
         }
 
-        // 2. Only for protected paths: try to process JWT
-        try {
-            String jwt = parseJwt(request);
+        // For protected paths: process the token
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            logger.warn("No valid Bearer token for protected path: {}", path);
+            filterChain.doFilter(request, response);
+            return;
+        }
 
-            if (jwt != null && jwtUtils.validateToken(jwt)) {
+        String jwt = authHeader.substring(7);
+        logger.info("Extracted JWT: {}...", jwt.substring(0, 20));
+
+        try {
+            if (jwtUtils.validateToken(jwt)) {
                 String email = jwtUtils.getEmailFromToken(jwt);
+                logger.info("Valid token for user: {}", email);
 
                 if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                     UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(
-                                    userDetails, null, userDetails.getAuthorities());
-
-                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities());
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                    logger.info("Authentication set for user: {}", email);
                 }
+            } else {
+                logger.warn("Invalid JWT token for path: {}", path);
             }
-            // If token is invalid/missing → just continue (no auth set) → security chain will reject if needed
         } catch (Exception e) {
-            // Optional: log the error, but do NOT throw — let the request continue to .anyRequest().authenticated()
-            logger.warn("JWT processing failed for path: {}, reason: {}", path, e.getMessage());
+            logger.error("JWT processing failed for path: {}", path, e);
         }
 
-        // 3. Always continue the chain
         filterChain.doFilter(request, response);
+    }
+
+    private boolean isPublicPath(String path) {
+        // IMPORTANT CHANGE: Removed "/api/products/**" from public paths
+        // Security chain already handles GET /api/products/** as permitAll
+        // POST/PUT/DELETE/PATCH must be validated here
+        List<String> publicPatterns = List.of(
+                "/api/auth/**",
+                "/v3/api-docs/**",
+                "/swagger-ui/**",
+                "/swagger-ui.html",
+                "/swagger-resources/**",
+                "/webjars/**"
+                // Do NOT add /api/products/** here anymore
+        );
+
+        return publicPatterns.stream()
+                .anyMatch(pattern -> pathMatcher.match(pattern, path));
     }
 
     private String parseJwt(HttpServletRequest request) {
         String header = request.getHeader("Authorization");
 
-        // Add this debug line
         System.out.println("Authorization Header: " + header);
 
         if (StringUtils.hasText(header) && header.startsWith("Bearer ")) {
@@ -99,25 +115,5 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         System.out.println("No valid Authorization header found");
         return null;
-    }
-
-    //Helper method to check if the path is public
-    private boolean isPublicPath(String path) {
-        // List of ant-style patterns for public paths
-        List<String> publicPatterns = List.of(
-                "/api/auth/**",
-                "/v3/api-docs/**",
-                "/swagger-ui/**",
-                "/swagger-ui.html",
-                "/swagger-resources/**",
-                "/webjars/**",
-                "/api/products",           // exact match
-                "/api/products/**"         // covers /api/products/9, /api/products?page=..., etc.
-        );
-
-        PathMatcher pathMatcher = new AntPathMatcher();
-
-        return publicPatterns.stream()
-                .anyMatch(pattern -> pathMatcher.match(pattern, path));
     }
 }
