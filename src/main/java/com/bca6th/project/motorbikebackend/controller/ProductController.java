@@ -70,7 +70,7 @@ public class ProductController {
     }
 
     // ADMIN: Soft delete (logical delete – set active = false)
-    @DeleteMapping("/toogle-active/{id}")
+    @PatchMapping("/toogle-active/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPERADMIN')")
     @Operation(summary = "Deactivate active products", description = "Sets product as inactive instead of deleting from DB. Admin and Superadmin only.")
     public ResponseEntity<Product> toggleActiveStatus(@PathVariable Long id) {

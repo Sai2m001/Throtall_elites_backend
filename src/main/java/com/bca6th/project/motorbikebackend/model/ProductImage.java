@@ -1,5 +1,6 @@
 package com.bca6th.project.motorbikebackend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -19,6 +20,7 @@ public class ProductImage {
     private boolean primary = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnore
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 }

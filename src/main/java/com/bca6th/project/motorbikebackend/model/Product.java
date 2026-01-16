@@ -101,42 +101,31 @@ public class Product {
     private List<ProductImage> images = new ArrayList<>();
 }
 
-//Json format to
-// {
-//        "name": "KTM Duke 200",
-//        "brand": "KTM",
-//        "type": "Naked",
-//        "dimensionMmLWH": "2002 x 873 x 1274",
-//        "engineCapacityCc": 200,
-//        "engineType": "Liquid Cooled, Single Cylinder, DOHC",
-//        "maxPower": "25 PS @ 10000 rpm",
-//        "maxTorque": "19.5 Nm @ 8000 rpm",
-//        "mileageKmpl": "35 km/l",
-//        "topSpeedKmph": "142 km/h",
-//        "gearbox": "6 Speed",
-//        "clutchType": "Slipper Clutch",
-//        "frontBrake": "300mm Disc, ABS",
-//        "rearBrake": "230mm Disc, ABS",
-//        "frontSuspension": "WP USD Fork",
-//        "rearSuspension": "WP Monoshock",
-//        "frontTyre": "110/70-17",
-//        "rearTyre": "150/60-17",
+//Json format to create and update product
+//{
+//        "rearSuspension": "Linked‑type Monocross Suspension",
+//        "frontTyre": "100/80‑17 Tubeless",
+//        "maxPower": "18.5 PS @ 10000 rpm",
+//        "frontBrake": "Disc Brake (282 mm) with Single‑Channel ABS",
+//        "frontSuspension": "Telescopic Fork",
+//        "clutchType": "Wet Multiplate Clutch",
+//        "brand": "Yamaha",
+//        "rearBrake": "Disc Brake (220 mm)",
+//        "mileageKmpl": "45 kmpl",
+//        "price": 429900.0,
+//        "name": "Yamaha MT‑15",
+//        "topSpeedKmph": "118 km/h",
+//        "seatHeightMm": "810 mm",
+//        "maxTorque": "13.9 Nm @ 8500 rpm",
 //        "tyreType": "Tubeless",
-//        "fuelTankCapacityL": "13.4 L",
-//        "seatHeightMm": "822 mm",
-//        "groundClearanceMm": "155 mm",
-//        "kerbWeightKg": "159 kg",
-//        "stock": 12,
-//        "price": 245000.0,
-//        "active": true,
-//        "images": [
-//        {
-//        "imageUrl": "https://example.com/duke200-front.jpg",
-//        "primary": true
-//        },
-//        {
-//        "imageUrl": "https://example.com/duke200-side.jpg",
-//        "primary": false
-//        }
-//        ]
+//        "fuelTankCapacityL": "10 L",
+//        "groundClearanceMm": "170 mm",
+//        "stock": 10,
+//        "dimensionMmLWH": "2020 mm x 800 mm x 1070 mm",
+//        "type": "Naked / Streetfighter",
+//        "engineType": "Liquid Cooled, Single Cylinder, 4‑Stroke, SOHC, FI",
+//        "gearbox": "6 Speed",
+//        "engineCapacityCc": 155,
+//        "rearTyre": "140/70‑17 Tubeless",
+//        "kerbWeightKg": "138 kg"
 //        }
