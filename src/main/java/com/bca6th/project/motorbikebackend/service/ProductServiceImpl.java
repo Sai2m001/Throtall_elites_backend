@@ -5,6 +5,7 @@ import com.bca6th.project.motorbikebackend.exception.ResourceNotFoundException;
 import com.bca6th.project.motorbikebackend.model.Product;
 import com.bca6th.project.motorbikebackend.model.ProductImage;
 import com.bca6th.project.motorbikebackend.repository.ProductRepository;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -22,6 +23,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.io.File;
 
 @Service
 @RequiredArgsConstructor
@@ -36,59 +38,68 @@ public class ProductServiceImpl implements ProductService {
     public List<ProductImage> processImageUploads(Product product, MultipartFile[] files) {
         List<ProductImage> images = new ArrayList<>();
 
+        System.out.println("=== IMAGE UPLOAD DEBUG START ===");
+        System.out.println("uploadDir (raw): " + uploadDir);
+        System.out.println("Product ID: " + product.getId());
+
         if (files == null || files.length == 0) {
+            System.out.println("No files received");
             return images;
         }
 
-        // Define product-specific folder: src/uploads/products/{productId}
-        String productUploadPath = uploadDir + "/products/" + product.getId();
+        // FIX: Convert to absolute path + normalize
+        File baseDir = new File(uploadDir).getAbsoluteFile();
+        String productUploadPath = baseDir.getAbsolutePath() + File.separator + "products" + File.separator + product.getId();
         Path uploadPath = Paths.get(productUploadPath);
 
+        System.out.println("Resolved absolute upload directory: " + uploadPath);
+
         try {
-            // Create directories if they don't exist
             Files.createDirectories(uploadPath);
+            System.out.println("Directory OK");
         } catch (IOException e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create upload directory" + product.getId());
+            System.err.println("Dir creation failed: " + e.getMessage());
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Cannot create dir", e);
         }
 
         for (int i = 0; i < files.length; i++) {
             MultipartFile file = files[i];
             if (file.isEmpty()) continue;
 
-            // Validate image type
-            String contentType = file.getContentType();
-            if (contentType == null || !contentType.startsWith("image/")) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only image files are allowed: " + file.getOriginalFilename());
-            }
+            String original = file.getOriginalFilename();
+            String ext = original != null && original.contains(".")
+                    ? original.substring(original.lastIndexOf("."))
+                    : ".jpg";
 
-            // Generate unique filename to avoid conflicts
-            String originalFilename = file.getOriginalFilename();
-            String extension = "";
-            if (originalFilename != null && originalFilename.contains(".")) {
-                extension = originalFilename.substring(originalFilename.lastIndexOf("."));
-            }
-            String filename = UUID.randomUUID().toString() + extension;
-
-            // Full path to save file
+            String filename = UUID.randomUUID().toString() + ext;
             Path filePath = uploadPath.resolve(filename);
 
             try {
                 Files.write(filePath, file.getBytes());
+                System.out.println("SUCCESS saved: " + filePath.toAbsolutePath());
+
+                ProductImage img = new ProductImage();
+                img.setImageUrl("/uploads/products/" + product.getId() + "/" + filename);
+                img.setPrimary(i == 0);
+                img.setProduct(product);
+                images.add(img);
             } catch (IOException e) {
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to save uploaded file" +filename);
+                System.err.println("Write failed for " + filename + ": " + e.getMessage());
+                e.printStackTrace();
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "File save failed", e);
             }
-
-            // Create ProductImage entity with correct relative URL
-            ProductImage productImage = new ProductImage();
-            productImage.setImageUrl("/uploads/products/" + product.getId() + "/" + filename);
-            productImage.setPrimary(i == 0); // First image is primary
-            productImage.setProduct(product);
-
-            images.add(productImage);
         }
 
+        System.out.println("=== IMAGE UPLOAD DEBUG END ===");
         return images;
     }
+
+    private String getExtension(String original) {
+        if (original == null) return "";
+        int dot = original.lastIndexOf('.');
+        return dot > 0 ? original.substring(dot) : "";
+    }
+
 
     @Override
     public Product createProduct(ProductRequestDto dto, MultipartFile[] images) {
@@ -265,5 +276,13 @@ public class ProductServiceImpl implements ProductService {
                 target.getImages().add(copy);
             });
         }
+    }
+
+    @Value("${app.test.property:NOT_FOUND}")
+    private String testProperty;
+
+    @PostConstruct
+    public void logTest() {
+        System.out.println("TEST PROPERTY VALUE: " + testProperty);
     }
 }
