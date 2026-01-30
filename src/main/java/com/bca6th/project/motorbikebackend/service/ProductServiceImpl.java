@@ -32,7 +32,7 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
 
-    @Value("{app.upload.dir}")
+    @Value("${app.upload.dir}")
     private String uploadDir;
 
     public List<ProductImage> processImageUploads(Product product, MultipartFile[] files) {
@@ -52,7 +52,8 @@ public class ProductServiceImpl implements ProductService {
         String productUploadPath = baseDir.getAbsolutePath() + File.separator + "products" + File.separator + product.getId();
         Path uploadPath = Paths.get(productUploadPath);
 
-        System.out.println("Resolved absolute upload directory: " + uploadPath);
+        System.out.println("Saving images to absolute path: " + uploadPath.toAbsolutePath());
+        System.out.println("Base upload dir resolved: " + new File(uploadDir).getAbsolutePath());
 
         try {
             Files.createDirectories(uploadPath);

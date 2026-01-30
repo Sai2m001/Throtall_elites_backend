@@ -12,12 +12,11 @@ public class WebConfig implements WebMvcConfigurer {
     private String uploadDir;
 
     @Override
-    public void addResourceHandlers(ResourceHandlerRegistry registry){
-        //Serve files under /uploads/** URL pattern from the file system location specified by uploadDir
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        String location = "file:" + uploadDir + "/";
+        System.out.println("Serving /uploads/** from: " + new java.io.File(uploadDir).getAbsolutePath());
+
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:"+ uploadDir + "/");
-        // Optional: Also serve from classpath (for default images if any)
-        // registry.addResourceHandler("/uploads/**")
-        //         .addResourceLocations("classpath:/uploads/");
+                .addResourceLocations(location);
     }
 }
