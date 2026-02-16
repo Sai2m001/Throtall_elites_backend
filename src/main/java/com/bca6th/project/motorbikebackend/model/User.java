@@ -25,9 +25,6 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String name;
 
-//    private Image profileImg;
-//
-//    private Image document;
 @Column(name = "contact_no", nullable = false)
     private String contactNo;
 
