@@ -13,7 +13,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -39,17 +38,32 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**",
-                                "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",
-                                "/swagger-resources/**", "/webjars/**").permitAll()
+                        // ── Public ──────────────────────────────────────────
+                        .requestMatchers(
+                                "/api/auth/**",
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/swagger-resources/**",
+                                "/webjars/**"
+                        ).permitAll()
 
+                        // Products — public reads, admin writes
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
-
-                        // Admin-only write operations
-                        .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PATCH, "/api/products/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST,   "/api/products/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH,  "/api/products/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
 
+                        // ── Test Rides ──────────────────────────────────────
+                        // User: submit a request
+                        .requestMatchers(HttpMethod.POST, "/api/test-rides").hasRole("USER")
+                        // User: view their own requests
+                        .requestMatchers(HttpMethod.GET, "/api/test-rides/my").hasRole("USER")
+                        // Admin: view all requests + update status
+                        .requestMatchers(HttpMethod.GET,   "/api/test-rides").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/test-rides/**").hasRole("ADMIN")
+
+                        // ── Everything else requires authentication ─────────
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
@@ -57,8 +71,6 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // CRITICAL FIX: Completely bypass security for /uploads/**
-    // This is the most reliable way - static files should not be protected
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
         return (web) -> web.ignoring().requestMatchers("/uploads/**");
