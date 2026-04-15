@@ -11,14 +11,12 @@ import java.util.List;
 
 public interface ProductService {
 
-    // ADMIN ONLY
     List<ProductImage> processImageUploads(Product product, MultipartFile[] files);
     Product createProduct(ProductRequestDto dto, MultipartFile[] images);
     Product updateProduct(Long id, ProductRequestDto dto, MultipartFile[] newImages);
     void softDelete(Long id);
     void hardDelete(Long id);
 
-    // PUBLIC
     Product getById(Long id);
     Page<Product> getAllActive(Pageable pageable);
     Page<Product> search(

@@ -196,8 +196,6 @@ public class EmailServiceImpl implements EmailService{
         mailSender.send(message);
     }
 
-    // ─── New: User decline email ──────────────────────────────────────────────
-
     @Override
     public void sendTestRideDeclineToUser(
             String to,

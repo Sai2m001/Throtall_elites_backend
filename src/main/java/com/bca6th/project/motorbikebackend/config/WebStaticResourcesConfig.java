@@ -16,6 +16,6 @@ public class WebStaticResourcesConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/uploads/**")
                 .addResourceLocations("file:" + uploadDir + "/")
-                .setCachePeriod(3600); // 1 hour cache - good for images
+                .setCachePeriod(3600);
     }
 }

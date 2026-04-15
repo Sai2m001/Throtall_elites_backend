@@ -79,8 +79,6 @@ public class TestRideServiceImpl implements TestRideService {
                 .toList();
     }
 
-    // ─── User: get their own requests ────────────────────────────────────────
-
     @Override
     public List<TestRideResponseDto> getMyRequests(String userEmail) {
         User user = userRepository.findByEmail(userEmail)

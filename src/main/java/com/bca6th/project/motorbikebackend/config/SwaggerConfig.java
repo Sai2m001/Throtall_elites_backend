@@ -19,11 +19,9 @@ public class SwaggerConfig {
                         .title("Motorbike Dealership API")
                         .version("1.0.0")
                         .description("Backend API for Dhamaka Throt-all motorbike with OTP login, product search, test rides, delivery and messaging"))
-                // Relative server URL — fixes double path in Try it out
                 .addServersItem(new Server()
-                        .url("/")  // Relative → uses current host/port
+                        .url("/")
                         .description("Relative Server (Local Development)"))
-                // JWT Bearer Auth
                 .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
                 .components(new Components()
                         .addSecuritySchemes("bearerAuth",

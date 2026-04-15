@@ -33,7 +33,6 @@ public class ProductController {
     private final ProductService        productService;
     private final RecommendationService recommendationService;
 
-    // ADMIN: Create new product
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Create a new motorbike product")
@@ -44,7 +43,6 @@ public class ProductController {
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
-    // ADMIN: Update existing product
     @PatchMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Update an existing motorbike product")
@@ -56,7 +54,6 @@ public class ProductController {
         return ResponseEntity.ok(updated);
     }
 
-    // ADMIN: Soft delete
     @DeleteMapping("/{id}/soft")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> softDelete(@PathVariable Long id) {
@@ -64,7 +61,6 @@ public class ProductController {
         return ResponseEntity.noContent().build();
     }
 
-    // ADMIN: Hard delete
     @DeleteMapping("/{id}/hard")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> hardDelete(@PathVariable Long id) {
@@ -72,11 +68,6 @@ public class ProductController {
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * PUBLIC: Get single product by ID.
-     * Records a view for the recommendation engine.
-     * viewerKey = userId if authenticated, "guest" if anonymous.
-     */
     @GetMapping("/{id}")
     @Operation(summary = "Get a product by ID")
     public ResponseEntity<Product> getById(
@@ -85,18 +76,15 @@ public class ProductController {
     ) {
         Product product = productService.getById(id);
 
-        // Record view — fire-and-forget, never block the response
         try {
             String viewerKey = (userDetails != null) ? userDetails.getUsername() : "guest";
             recommendationService.recordView(id, viewerKey);
         } catch (Exception e) {
-            // Recommendation tracking must never break the main response
         }
 
         return ResponseEntity.ok(product);
     }
 
-    // PUBLIC: List/search products
     @GetMapping
     @Operation(summary = "List or search active products")
     public ResponseEntity<Page<Product>> list(

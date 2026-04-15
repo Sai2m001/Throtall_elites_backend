@@ -35,13 +35,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
         String method = request.getMethod();
 
-        // Skip JWT check for known public paths AND all GET requests to products
         if (isPublicPath(path) || isPublicProductsGet(path, method)) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // Normal JWT processing only for protected paths
         String jwt = parseJwt(request);
 
         if (jwt != null && jwtUtils.validateToken(jwt)) {

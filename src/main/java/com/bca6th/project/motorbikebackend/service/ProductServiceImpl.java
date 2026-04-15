@@ -133,17 +133,14 @@ public class ProductServiceImpl implements ProductService {
         product.setStock(dto.getStock());
         product.setPrice(dto.getPrice());
 
-        product.setActive(true); // New products are active by default
+        product.setActive(true);
 
-        // 2. Save product first to generate ID (required for folder path)
         product = productRepository.save(product);
 
-        // 3. Handle image uploads (if any)
         if (images != null && images.length > 0) {
             List<ProductImage> uploadedImages = processImageUploads(product, images);
             product.getImages().addAll(uploadedImages);
 
-            // 4. Save again with attached images
             product = productRepository.save(product);
         }
 
@@ -153,11 +150,9 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Product updateProduct(Long id, ProductRequestDto dto, MultipartFile[] newImages) {
 
-        // 1. Find existing product (throws if not found – you can customize the exception)
         Product existing = productRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found with id: " + id));
 
-        // 2. Update scalar fields from DTO
         existing.setName(dto.getName());
         existing.setBrand(dto.getBrand());
         existing.setType(dto.getType());
@@ -183,15 +178,12 @@ public class ProductServiceImpl implements ProductService {
         existing.setKerbWeightKg(dto.getKerbWeightKg());
         existing.setStock(dto.getStock());
         existing.setPrice(dto.getPrice());
-        // active remains unchanged (use separate endpoint for soft delete if needed)
 
-        // 3. Handle new image uploads (optional – if no new images sent, skip)
         if (newImages != null && newImages.length > 0) {
             List<ProductImage> uploadedImages = processImageUploads(existing, newImages);
             existing.getImages().addAll(uploadedImages);
         }
 
-        // 4. Save and return updated product (with new images if added)
         return productRepository.save(existing);
     }
 
@@ -232,14 +224,11 @@ public class ProductServiceImpl implements ProductService {
         );
     }
 
-    // Helper: Link images to product (bidirectional)
     private void linkImagesToProduct(Product product) {
         if (product.getImages() != null) {
             product.getImages().forEach(img -> img.setProduct(product));
         }
     }
-
-    // Helper: Copy all fields except id, images (will be replaced)
     private void copyProperties(Product source, Product target) {
         target.setName(source.getName());
         target.setBrand(source.getBrand());
@@ -267,7 +256,6 @@ public class ProductServiceImpl implements ProductService {
         target.setStock(source.getStock());
         target.setActive(source.getActive());
 
-        // Replace images
         target.getImages().clear();
         if (source.getImages() != null) {
             source.getImages().forEach(img -> {

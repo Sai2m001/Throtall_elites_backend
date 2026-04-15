@@ -12,16 +12,10 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ProductRepository extends JpaRepository<Product, Long> {
-
-    // Fetch product with images (eager)
     @EntityGraph(attributePaths = "images")
     Optional<Product> findWithImagesById(Long id);
-
-    // Fetch all active products with images + pagination
     @EntityGraph(attributePaths = "images")
     Page<Product> findByActiveTrue(Pageable pageable);
-
-    // Search with filters + images + pagination
     @Query("""
     SELECT p FROM Product p LEFT JOIN FETCH p.images
     WHERE p.active = true

@@ -38,7 +38,6 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // ── Public ──────────────────────────────────────────
                         .requestMatchers(
                                 "/api/auth/**",
                                 "/v3/api-docs/**",
@@ -57,17 +56,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
                         .requestMatchers("/api/deliveries/**").hasRole("ADMIN")
                         .requestMatchers("/api/recommendations/**").permitAll()
-
-                        // ── Test Rides ──────────────────────────────────────
-                        // User: submit a request
                         .requestMatchers(HttpMethod.POST, "/api/test-rides").hasRole("USER")
-                        // User: view their own requests
                         .requestMatchers(HttpMethod.GET, "/api/test-rides/my").hasRole("USER")
-                        // Admin: view all requests + update status
                         .requestMatchers(HttpMethod.GET,   "/api/test-rides").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/test-rides/**").hasRole("ADMIN")
-
-                        // ── Everything else requires authentication ─────────
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);

@@ -25,7 +25,6 @@ public class JwtUtils {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes());
     }
 
-    // 1. For Spring Security filter (UsernamePasswordAuthenticationFilter)
     public String generateToken(Authentication authentication) {
         org.springframework.security.core.userdetails.User principal =
                 (org.springframework.security.core.userdetails.User) authentication.getPrincipal();
@@ -41,7 +40,6 @@ public class JwtUtils {
                 .compact();
     }
 
-    // 2. For OTP login — USE OUR User ENTITY
     public String generateToken(User user) {
         return Jwts.builder()
                 .setSubject(user.getEmail())

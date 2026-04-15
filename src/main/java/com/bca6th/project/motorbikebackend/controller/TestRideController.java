@@ -26,7 +26,6 @@ public class TestRideController {
     private final TestRideService testRideService;
 
     @PostMapping
-//    @PreAuthorize("hasRole('USER')")
     @Operation(summary = "Submit a test ride request", description = "Authenticated USER only.")
     public ResponseEntity<TestRideResponseDto> submitRequest(
             @RequestBody @Valid TestRideRequestDto dto,
